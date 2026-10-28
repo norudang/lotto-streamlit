@@ -3,6 +3,9 @@ import requests
 import streamlit as st
 from urllib.parse import urlparse, parse_qs
 
+# API 키 입력
+API_KEY = "AIzaSyDRt4MOvf9JcnGmKEipSbRRv1HcOB6o1C8"
+
 # 페이지 설정
 st.set_page_config(
     page_title="유튜브 참여율 분석",
@@ -10,20 +13,17 @@ st.set_page_config(
     layout="centered"
 )
 
-# 제목 및 설명
 st.title("📊 유튜브 참여율 분석")
 st.write("유튜브 영상의 조회수, 좋아요, 댓글 수를 분석합니다.")
 
-# 영상 주소 입력
 video_url = st.text_input(
-    "유튜브 영상 주소 또는 영상 ID",
+    "유튜브 영상 주소를 입력하세요",
     value="https://www.youtube.com/watch?v=34TVs8d1Xhs"
 )
 
 def extract_video_id(url):
     url = url.strip()
 
-    # 영상 ID만 입력한 경우
     if len(url) == 11 and "/" not in url and "?" not in url:
         return url
 
@@ -43,24 +43,23 @@ def extract_video_id(url):
 
     return None
 
-# 분석 버튼
-if st.button("🔍 분석하기", type="primary"):
+if st.button("🔍 분석하기"):
     video_id = extract_video_id(video_url)
 
     if not video_id:
         st.error("올바른 유튜브 영상 주소를 입력해 주세요.")
 
+    elif API_KEY == "여기에_API_키_입력":
+        st.error("코드 맨 위에 실제 YouTube API 키를 입력해 주세요.")
+
     else:
         try:
-            # Streamlit Cloud Secrets에서 API 키 가져오기
-            api_key = st.secrets["YOUTUBE_API_KEY"]
-
             response = requests.get(
                 "https://www.googleapis.com/youtube/v3/videos",
                 params={
                     "part": "snippet,statistics",
                     "id": video_id,
-                    "key": api_key
+                    "key": API_KEY
                 },
                 timeout=30
             )
@@ -68,10 +67,10 @@ if st.button("🔍 분석하기", type="primary"):
             data = response.json()
 
             if not response.ok:
-                message = data.get("error", {}).get(
-                    "message", "알 수 없는 API 오류"
+                error = data.get("error", {}).get(
+                    "message", "알 수 없는 오류"
                 )
-                st.error(f"YouTube API 오류: {message}")
+                st.error(f"YouTube API 오류: {error}")
 
             elif not data.get("items"):
                 st.error("영상을 찾을 수 없습니다.")
@@ -87,9 +86,7 @@ if st.button("🔍 분석하기", type="primary"):
 
                 st.subheader(f"🎬 {title}")
 
-                # 주요 통계
                 col1, col2, col3 = st.columns(3)
-
                 col1.metric("조회수", f"{views:,}회")
                 col2.metric("좋아요", f"{likes:,}개")
                 col3.metric("댓글", f"{comments:,}개")
@@ -98,18 +95,17 @@ if st.button("🔍 분석하기", type="primary"):
                 st.subheader("📈 참여율 분석 결과")
 
                 if views > 0:
-                    like_rate = likes / views * 100
-                    comment_rate = comments / views * 100
-                    total_rate = (likes + comments) / views * 100
-
-                    col1, col2 = st.columns(2)
-
-                    col1.metric("좋아요 비율", f"{like_rate:.2f}%")
-                    col2.metric("댓글 비율", f"{comment_rate:.2f}%")
-
+                    st.metric(
+                        "좋아요 비율",
+                        f"{likes / views * 100:.2f}%"
+                    )
+                    st.metric(
+                        "댓글 비율",
+                        f"{comments / views * 100:.2f}%"
+                    )
                     st.metric(
                         "좋아요 + 댓글의 조회수 대비 비율",
-                        f"{total_rate:.2f}%"
+                        f"{(likes + comments) / views * 100:.2f}%"
                     )
 
                     st.caption(
@@ -119,17 +115,8 @@ if st.button("🔍 분석하기", type="primary"):
                 else:
                     st.warning("조회수가 0이라 비율을 계산할 수 없습니다.")
 
-        except KeyError:
-            st.error(
-                "API 키가 설정되지 않았습니다. "
-                "Streamlit Cloud의 앱 설정에서 Secrets를 등록해 주세요."
-            )
-
         except requests.RequestException:
-            st.error("네트워크 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.")
-
-        except ValueError:
-            st.error("API 응답을 처리할 수 없습니다.")
+            st.error("네트워크 오류가 발생했습니다. 다시 시도해 주세요.")
 
 st.divider()
 st.caption("YouTube Data API를 이용한 영상 통계 분석")
