@@ -2,7 +2,7 @@
 import requests
 import streamlit as st
 
-API_KEY = st.secrets["YOUTUBE_API_KEY"]
+API_KEY = "AIzaSyDRt4MOvf9JcnGmKEipSbRRv1HcOB6o1C8"
 VIDEO_ID = "34TVs8d1Xhs"
 
 # 2. 영상 통계 가져오기
