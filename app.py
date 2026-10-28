@@ -1,38 +1,56 @@
+mport requests
+from google.colab import userdata
 
-import streamlit as st
-import random
+# 1. API 키와 영상 ID
+API_KEY = userdata.get("YOUTUBE_API_KEY")
+VIDEO_ID = "34TVs8d1Xhs"
 
-# 페이지 설정
-st.set_page_config(
-    page_title="🎰 로또 번호 생성기",
-    page_icon="🎯",
-    layout="centered"
-)
+# 2. 영상 통계 가져오기
+url = "https://www.googleapis.com/youtube/v3/videos"
 
-st.title("🎰 로또 번호 생성기 (보너스 포함)")
-st.markdown(
-    "버튼을 누르면 **1~45** 중에서 **메인 6개 + 보너스 1개** 번호를 뽑아요! 🍀"
-)
+params = {
+    "part": "snippet,statistics",
+    "id": VIDEO_ID,
+    "key": API_KEY
+}
 
-count = st.slider("몇 세트를 뽑을까요?", 1, 10, 1)
+response = requests.get(url, params=params, timeout=30)
+data = response.json()
 
+if not response.ok:
+    print("API 오류:", data.get("error", {}).get("message"))
 
-def draw_one_set():
-    main_numbers = sorted(random.sample(range(1, 46), 6))
-    remaining = [n for n in range(1, 46) if n not in main_numbers]
-    bonus = random.choice(remaining)
-    return main_numbers, bonus
+elif not data.get("items"):
+    print("영상을 찾을 수 없습니다.")
 
-
-if st.button("🎲 로또 번호 뽑기"):
-    for i in range(1, count + 1):
-        main, bonus = draw_one_set()
-        st.success(f"세트 {i} ➜ 🎯 메인: {', '.join(map(str, main))}")
-        st.info(f"세트 {i} ➜ 💎 보너스: {bonus}")
-
-    st.balloons()
 else:
-    st.caption("⬆️ 세트 개수를 정하고 버튼을 눌러보세요!")
+    video = data["items"][0]
+    title = video["snippet"]["title"]
+    stats = video["statistics"]
 
-st.markdown("---")
-st.caption("Made with Streamlit · 행운 가득! 🍀")
+    views = int(stats.get("viewCount", 0))
+    likes = int(stats.get("likeCount", 0))
+    comments = int(stats.get("commentCount", 0))
+
+    print("=" * 45)
+    print("📊 유튜브 참여율 분석")
+    print("=" * 45)
+    print("영상 제목:", title)
+    print(f"조회수: {views:,}회")
+    print(f"좋아요 수: {likes:,}개")
+    print(f"댓글 수: {comments:,}개")
+
+    if views > 0:
+        like_rate = likes / views * 100
+        comment_rate = comments / views * 100
+
+        print("-" * 45)
+        print(f"좋아요 비율: {like_rate:.2f}%")
+        print(f"댓글 비율: {comment_rate:.2f}%")
+        print(f"좋아요 또는 댓글 수 합계의 조회수 대비 비율: "
+              f"{(likes + comments) / views * 100:.2f}%")
+    else:
+        print("조회수가 0이므로 비율을 계산할 수 없습니다.")
+
+    print("=" * 45)
+    print("※ 실제 시청자 중 행동한 사람의 비율과는 다를 수 있습니다.")
