@@ -1,4 +1,5 @@
-mport requests
+
+import requests
 from google.colab import userdata
 
 # 1. API 키와 영상 ID
@@ -43,14 +44,15 @@ else:
     if views > 0:
         like_rate = likes / views * 100
         comment_rate = comments / views * 100
+        total_rate = (likes + comments) / views * 100
 
         print("-" * 45)
         print(f"좋아요 비율: {like_rate:.2f}%")
         print(f"댓글 비율: {comment_rate:.2f}%")
-        print(f"좋아요 또는 댓글 수 합계의 조회수 대비 비율: "
-              f"{(likes + comments) / views * 100:.2f}%")
+        print(f"좋아요 또는 댓글 수 합계의 조회수 대비 비율: {total_rate:.2f}%")
     else:
         print("조회수가 0이므로 비율을 계산할 수 없습니다.")
 
     print("=" * 45)
     print("※ 실제 시청자 중 행동한 사람의 비율과는 다를 수 있습니다.")
+
