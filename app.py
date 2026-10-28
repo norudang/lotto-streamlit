@@ -1,9 +1,8 @@
 
 import requests
-from google.colab import userdata
+import streamlit as st
 
-# 1. API 키와 영상 ID
-API_KEY = userdata.get("YOUTUBE_API_KEY")
+API_KEY = st.secrets["YOUTUBE_API_KEY"]
 VIDEO_ID = "34TVs8d1Xhs"
 
 # 2. 영상 통계 가져오기
